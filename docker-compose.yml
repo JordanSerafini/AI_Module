@@ -1,0 +1,23 @@
+services:
+  llama-server:
+    image: ai/meta-llama:3.1-8B-Instruct
+    container_name: vllm
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    ports:
+      - "8000:8000"
+    command: ["--cpu-offload-gb", "5", "--max-model-len", "30576"]
+
+  ts-app:
+    build:
+      context: .
+      dockerfile: Dockerfile    
+    volumes:
+      - .:/usr/src/app
+    working_dir: /usr/src/app
+    environment:
+      - LLAMA_API_URL=http://llama-server:8000/v1/completions
+    depends_on:
+      - llama-server
+    command: ["npm", "start"]
